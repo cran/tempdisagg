@@ -1,6 +1,6 @@
 SubRegressionBased <- function(y_l, X,
   conversion="sum", method="chow-lin-minrss", fr=4, vcov = "ecotrim", 
-  neg.rho = TRUE, tol=1e-16, lower=0) {
+  neg.rho = TRUE, tol=1e-16, lower=-0.999) {
   # performs temporal disaggregation for regression based methods
   #
   # Args:
@@ -59,9 +59,9 @@ SubRegressionBased <- function(y_l, X,
     Objective <- function(rho){-CalcLogL(CalcQ_Lit(X, rho), C=C, y_l=y_l, X=X)}
   } else if (method=="litterman-minrss"){      
     if (vcov == "ecotrim"){
-      Objective <- function(rho){CalcRSS(CalcR(rho, pm), C=C, y_l=y_l, X=X)}
+      Objective <- function(rho){CalcRSS(CalcQ_Lit(X, rho), C=C, y_l=y_l, X=X)}
     } else if (vcov == "quilis"){
-      Objective <- function(rho){CalcRSS(CalcQ(rho, pm), C=C, y_l=y_l, X=X)}
+      Objective <- function(rho){CalcRSS(CalcQ_Lit(X, rho), C=C, y_l=y_l, X=X)}
     } else {
       stop("wrong optim specification")
     }
@@ -84,12 +84,18 @@ SubRegressionBased <- function(y_l, X,
       warning("boundary solution for rho", immediate.=TRUE)
     }
   } else if (method=="fernandez"){
-    rho <- 1
+    rho <- 0
   } else if (method=="ols"){
     rho <- 0
   }
 
-  Q       <- CalcQ(rho, pm)
+  # finding Q
+  if (method %in% c("fernandez", "litterman-maxlog", "litterman-minrss")){
+    Q       <- CalcQ_Lit(X, rho=rho)
+  } else if (method %in% c("chow-lin-maxlog", "chow-lin-minrss", "ols")){
+    Q       <- CalcQ(rho, pm)
+  }
+  
   b       <- CalcBeta(Q, C, y_l, X)
   s_2     <- CalcSigma2(Q, C, y_l, X)
   s_2_gls <- s_2 * n_l / (n_l - m) 

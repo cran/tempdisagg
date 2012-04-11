@@ -1,13 +1,13 @@
-130f8daa55c97f043df2b9cca795bd52 *DESCRIPTION
+1bdfec5f1897a365a2a634badddf05f2 *DESCRIPTION
 9fdfeb11f7ddba6f3aab9aaa6b1ac5dd *NAMESPACE
 8a56703666a98d2fcff132079b172ff2 *R/ta.R
 9c11b8f7a6b4792059fa45104bee2356 *R/td.R
-7c5a88c75b9ce62863dc581e624da8f7 *R/td.calc.R
+60bbc3529270f66d20eb654ef297e8c4 *R/td.calc.R
 36ecc51b623283a9f674861ffe81102c *R/td.output.R
-26f13534a3f2dcc0ea7614a21fc47649 *R/td.sub.R
+6efc676b8ffb07ab13e5b25716078e8f *R/td.sub.R
 e69889a62f7f44dfb2a2989e74167acb *data/swisspharma.RData
 9f12115c47cceda31a65c615b42fea89 *man/plot.td.Rd
 04fa2036047c7b5378fdf8b237d2c4c9 *man/summary.td.Rd
 1c971104b29e6e2ddd9298b6c1ef69e1 *man/swisspharma.Rd
 df45a73253dafdc1f5e306f7bc9605ff *man/ta.Rd
-cd6fab4a651eef7e8ef3b7c6ad96aca1 *man/td.Rd
+7d72879908ad823d82a28a8c2998dd6d *man/td.Rd

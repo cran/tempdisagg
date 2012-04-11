@@ -179,3 +179,7 @@ CalcQ_Lit <- function(X, rho=0) {
   # output
   Q_Lit
 }
+
+# CalcQ_Lit <- function(X, rho=0){
+#   (1/(1-rho^2)) * CalcR_Lit(X, rho=0)
+# }
