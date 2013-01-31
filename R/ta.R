@@ -24,10 +24,9 @@ ta <- function(x, conversion = "sum", to = "annual"){
       stop("unknown character string as the 'to' argument")
     }
   } else stop ("wrong specification of the 'to' argument")
-  
+
   if (!inherits(x, "ts")) stop("not a time series object.")
-  if (frequency(x) <= f_l) stop("destination frequency must be smaller than source")
-  
+
   if (inherits(x, "mts")){
     ncol  <- dim(x)[2]
     first  <- SubAggregation(x[,1], conversion=conversion, f_l=f_l)
@@ -54,21 +53,21 @@ SubAggregation <- function(x, conversion = "sum", f_l = 1){
   #
   # Returns:
   #   A time series object of class "ts"
-  
+
   f <- frequency(x)
   fr <- f / f_l
-  
+
   hf.start <- time(x)[!is.na(x)][1]
   hf.start.na <- time(x)[1]
   hf.end <- tail(time(x)[!is.na(x)],1)
   hf.end.na <- tail(time(x),1)
-  
+
   lf.start <- SubConvertStart(hf.start = hf.start, f = f, f_l = f_l)
   lf.start.na <- SubConvertStart(hf.start = hf.start.na, f = f, f_l = f_l)
-  
+
   lf.end <- SubConvertEnd(hf.end = hf.end, f = f, f_l = f_l)
   lf.end.na <- SubConvertEnd(hf.end = hf.end.na, f = f, f_l = f_l)
-  
+
   # if series contains only NAs, return NAs
   if (all(is.na(x))){
     z <- window(ts(NA, start=lf.start.na, frequency=f_l), end=lf.end.na, extend=TRUE)
@@ -78,7 +77,7 @@ SubAggregation <- function(x, conversion = "sum", f_l = 1){
     agg.ts <- ts(agg, start=lf.start, frequency=f_l)
     z <- window(agg.ts, start=lf.start.na, end=lf.end.na, extend=TRUE)
   }
-  
+
   z
 }
 
@@ -98,9 +97,10 @@ SubConvertEnd <- function(hf.end, f, f_l){
   # Remarks:
   #   Identical to SubConvertStart() except that ceiling() is exchanged by
   #   floor()
-  
+
   fr <- f / f_l
-  floor(hf.end) + (floor(((hf.end - floor(hf.end)) * f + 1) / fr) - 1) / f_l
+  floor(hf.end) + (floor(((hf.end - floor(hf.end)) * f + 1 + 1e-8) / fr) - 1) / f_l
+  # +1e-8 avoids rounding problems
 }
 
 
@@ -118,8 +118,9 @@ SubConvertStart <- function(hf.start, f, f_l){
   #
   # Remarks:
   #   Identical to SubConvertEnd() except that floor() is exchanged by ceiling().
-  
+
   fr <- f / f_l
   floor(hf.start) + ceiling(((hf.start - floor(hf.start)) * f)/fr - 1e-8)/f_l
   # -1e-8 avoids rounding problems
 }
+

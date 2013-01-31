@@ -3,11 +3,12 @@ print.td <- function(x, ...){
   #
   # Args:
   #   x:           an object of class "td"
+  #   ...:         further arguments, not used
   #
   # Returns: 
   #   prints the object with print.lm as a side effect
   print.lm(x, ...)
-  
+
   # for the internal version only:
   cat("\nUse summary() for details. \nUse predict() to extract the final series.
       \nUse ?td to see the help file.\n")
@@ -17,56 +18,44 @@ summary.td <- function(object, ...){
   # prepares a summary for an object of class "td"
   #
   # Args:
-  #   object: an object of class "td"
+  #   object:      an object of class "td"
   #
   # Returns: 
   #   an object of class "summary.td"
 
-  # change name from 'object' (default of the generic function) to standard 'x'
-  x <- object
-  
   # build output on top of the input
   z <- object
 
   # number of observations and number of indicator series
-  z$n_l <- length(x$actual)
-  if (is.null(dim(x$model))){
-    m <- 1
-    z$n <- length(x$model)
+  z$n_l <- length(object$actual)
+  if (is.null(dim(object$model))){
+    z$n <- length(object$model)
   } else {
-    m <- dim(x$model)[2]
-    z$n <- dim(x$model)[1]
+    z$n <- dim(object$model)[1]
   }
 
   # derivative statististics
-  if (!is.null(x$rss)){
-    z$sigma          <- sqrt(x$rss / z$df)
-    z$r.squared      <- 1 - x$rss / x$tss
-    z$adj.r.squared  <- 1 - (x$rss * (z$n_l-1)) / (x$tss * (z$n_l - m))
-    z$aic            <- log(x$rss / z$n_l) + 2 * (m/z$n_l)
-    z$bic            <- log(x$rss / z$n_l) + log(z$n_l) * (m / z$n_l)
-  }
   z$ar_l           <- cor(z$residuals[-1], z$residuals[-length(z$residuals)])
 
   # coefficents matrix
-  if (!is.null(coef(x))){
-    est  <- coef(x)
-    se   <- x$se
+  if (!is.null(coef(object))){
+    est  <- coef(object)
+    se   <- object$se
     tval <- est/se
     pval <- 2 * pnorm(-abs(tval))
-    
+
     z$coefficients <- cbind(est, se, tval, 
-                            2 * pt(abs(tval), z$df, lower.tail = FALSE))
+                          2 * pt(abs(tval), z$df, lower.tail = FALSE))
     dimnames(z$coefficients) <- list(names(est),
-                                     c("Estimate", "Std. Error", "t value", 
-                                       "Pr(>|t|)"))
+                                    c("Estimate", "Std. Error", "t value", 
+                                    "Pr(>|t|)"))
   }
   class(z) <- "summary.td"
   z
 }
 
 print.summary.td <- function (x, digits = max(3, getOption("digits") - 3), 
-      signif.stars = getOption("show.signif.stars"), ...) {
+    signif.stars = getOption("show.signif.stars"), ...) {
   # prints a summary for an object of class "td"
   #
   # Args:
@@ -76,7 +65,7 @@ print.summary.td <- function (x, digits = max(3, getOption("digits") - 3),
   #
   # Returns: 
   #   prints the summary as its side effect
-  
+
   cat("\nCall:\n", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n",
       sep = "")
   resid <- x$residuals
@@ -96,21 +85,24 @@ print.summary.td <- function (x, digits = max(3, getOption("digits") - 3),
       if (!is.null(aliased <- x$aliased) && any(aliased)) {
         cn <- names(aliased)
         coefs <- matrix(NA, length(aliased), 4, 
-                        dimnames = list(cn, colnames(coefs)))
+                    dimnames = list(cn, colnames(coefs)))
         coefs[!aliased, ] <- x$coefficients
       }
       printCoefmat(coefs, digits = digits, signif.stars = signif.stars,
         na.print = "NA")
   }
-  
+
   cat("\n'", x$method, "' disaggregation with '", x$conversion, 
-      "' conversion\n", sep = "")
-  cat(x$n_l, "low-freq. obs. converted to", x$n, "high-freq. obs.")
+      "' conversion", sep = "")
+  cat("\n", x$n_l, " low-freq. obs. converted to ", x$n, " high-freq. obs.", sep="")
   if (!is.null(x$adj.r.squared)) {
     cat("\nAdjusted R-squared:", formatC(x$adj.r.squared, digits = digits))
   }
   if (!is.null(x$rho)) {
     cat("\tAR1-Parameter:", formatC(x$rho, digits = digits))
+    if (x$truncated){
+      cat(" (truncated)")
+    }
   }
   if (!is.null(x$criterion)) {
     cat("\ncriterion:", x$criterion, "\torder of differencing 'h':", x$h)
@@ -124,27 +116,29 @@ plot.td <- function(x, ...){
   #
   # Args:
   #   object:      an object of class "td"
-  #   ...          further arguments, not used
+  #   ...:         further arguments, not used
   #
   # Returns: 
   #   a two panel plot as its side effect
-  
+
   old.par <- par(no.readonly=TRUE)  # backup par settings 
+  if(!is.null(x$vcov)) {ext <- paste("(", x$vcov, ")", sep="")} else {ext <- NULL}
   par(mfrow=c(2,1))                    
-  ts.plot(ts.intersect(x$actual, x$actual - x$residuals), 
-      lty=c("solid", "dashed"), col=c("black", "red"), 
-      ylab="actual vs. predicted (red)"); grid()
+  ts.plot(ts.intersect(x$actual, x$actual - x$residuals),
+          main=x$name, lty=c("solid", "dashed"), col=c("black", "red"), 
+          ylab="actual vs. predicted (red)", ...); grid();
+  mtext(paste("estimation method:", x$method, ext), 3, line=.4, cex=.9)
   ts.plot(ts.intersect(x$residuals, 0), lty=c("solid", "dashed"),
-      col=c("black", "red"), ylab="residuals"); grid()
+          col=c("black", "red"), ylab="residuals", ...); grid()
   on.exit(par(old.par))  # restore par settings
 }
 
 predict.td <- function(object, ...) {
-  # extracts the final series
+  # computes the disaggregated or interpolated high frequency series
   #
   # Args:
   #   object:      an object of class "td"
-  #   ...          further arguments, not used
+  #   ...:         further arguments, not used
   #
   # Returns: 
   #   an object of class "ts", containing the final series

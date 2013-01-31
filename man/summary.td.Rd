@@ -1,12 +1,8 @@
 \name{summary.td}
-\alias{print.summary.td}
 \alias{summary.td}
-\alias{predict.td}
-\alias{print.td}
 \alias{print.summary.td}
-\alias{summary.td}
 
-\title{Summary of a 'td'-Estimation}
+\title{Summary of a Temporal Disaggregation}
 \description{summary method for class "td".}
 \usage{
 \method{summary}{td}(object, \dots)
@@ -30,12 +26,6 @@
       \item{n_l}{number of low frequency observations}
       \item{n}{number of high frequency observations}
       \item{sigma}{standard deviation of the regression}
-      \item{r.squared}{R squared}
-      \item{adj.r.squared}{Adjusted R squared}
-      \item{aic}{Akaike information criterion}
-      \item{bic}{Schwarz information criterion}
-
-
       \item{ar_l}{empirical auto-correlation of the low frequency series}
       \item{coefficients}{a named matrix containing coefficients, standard
       deviations, t-values and p-values}
@@ -59,4 +49,4 @@ mod2 <- td(sales.a ~ 0, to = "quarterly", method = "uniform")
 summary(mod2)
 
 }
-\keyword{disaggregation method}
+\keyword{ts, models}

@@ -17,7 +17,7 @@ imports.q
 sales.a
 sales.q
 }
-\format{Each time series is an object of class "ts". The number of observations
+\format{Each time series is an object of class \code{"ts"}. The number of observations
 depends on the frequency.}
 \source{
 Import and Export Data are from the Swiss Federal Customs Administration. Sales

@@ -10,7 +10,7 @@ CalcC <- function(n_l, conversion, fr, n=NULL){
   #                 (matrix will be expanded by 0 if n is provided and > n_l*fr)
   #
   # Returns: 
-  #   The conversion matrix C
+  #   conversion matrix
 
   # set conversion.weights according to type of conversion
   if (conversion=="sum") {
@@ -33,100 +33,6 @@ CalcC <- function(n_l, conversion, fr, n=NULL){
   C
 }
 
-CalcBeta <- function(Q, C, y_l, X){
-  # calculates GLS/ML-estimator of beta
-  #
-  # Args:
-  #   Q:           s_2-factored-out VCov (S = s_2 * Q)
-  #                (instead of Q, S and R can be used to estimate b)
-  #   S:           variance-covariance matrix (VCov)
-  #   R:           correlation matrix
-  #                b is not affected by whether S, Q or R is used
-  #   C:           conversion matrix, with or without zeros
-  #   y_l:         vector of the low-frequency left-hand side variable
-  #   X:           matrix of high-frequency indicators
-  #
-  # Returns: 
-  #   b:           GLS/ML-estimator of beta, a vector
-
-  CQC_inv <- solve(C %*% Q %*% t(C))
-  as.numeric(solve(t(X) %*% t(C) %*% CQC_inv %*% C %*% X) %*% t(X) %*% t(C) 
-             %*% CQC_inv %*% y_l)
-}
-
-CalcSigma2 <- function(Q, C, y_l, X){
-  # calculates s_2, the ML-estimator of the variance of the high-freq. res.
-  #
-  # Args:
-  #   Q:           s_2-factored-out variance-covariance matrix
-  #   C:           conversion matrix, with or without zeros
-  #   y_l:         vector of the low-frequency left-hand side variable
-  #   X:           matrix of high-frequency indicators
-  #
-  # Returns: 
-  #   s_2:         ML-estimator of the variance of the high-freq. res., a scalar
-
-  n_l <- length(y_l)
-
-  # ML-Estimator for b (equal to GLS)
-  b <- CalcBeta(Q, C, y_l, X)
-
-  # ML-Estimator for s_2
-  u_l <- y_l - C %*% X %*% b
-  CQC_inv <- solve(C %*% Q %*% t(C))
-  as.numeric((t(u_l) %*% CQC_inv %*% u_l) / n_l)
-}
-
-CalcLogL <- function(Q, C, y_l, X){
-  # calculates the (low frequency) log likelihood (LogL)
-  #
-  # Args:
-  #   Q:           variance-covariance matrix, correlation matrix can be used
-  #                in some cases.
-  #   C:           conversion matrix, with or without zeros
-  #   y_l:         vector of the low-frequency left-hand side variable
-  #   X:           matrix of high-frequency indicators
-  #
-  # Returns: 
-  #   logl:        log likelihood, a scalar
-
-  n_l <- length(y_l)
-  m <- dim(X)[2]
-
-  # ML-Estimator for b (equal to GLS)
-  b <- CalcBeta(Q, C, y_l, X)
-
-  # ML-Estimator for s_2
-  s_2 <- CalcSigma2(Q, C, y_l, X)
-
-  # Log-Likelihood
-  u_l <- y_l - C %*% X %*% b
-  as.numeric(- n_l / 2 - n_l * log(2 * pi) / 2 - n_l * log(s_2) / 2 - 
-              log(det(C %*% Q %*% t(C))) / 2)
-}
-
-CalcRSS <- function(S, C, y_l, X){
-  # calculates the (low frequency) residual sum of square (RSS), 
-  #   weighted by the variance-covariance matrix
-  #
-  # Args:
-  #   S:           variance-covariance matrix, correlation matrix can be used
-  #                in some cases.
-  #   C:           conversion matrix, with or without zeros
-  #   y_l:         vector of the low-frequency left-hand side variable
-  #   X:           matrix of high-frequency indicators
-  #
-  # Returns: 
-  #   rss:         weighted residual sum of squares, a scalar
-
-  # ML-Estimator for b (equal to GLS)
-  # (b is not affected by whether S, Q or R is used)
-  b <- CalcBeta(S, C, y_l, X)
-  
-  u_l <- y_l - C %*% X %*% b
-  CSC_inv <- solve(C %*% S %*% t(C))
-  as.numeric(t(u_l) %*% CSC_inv %*% u_l)
-}
 
 CalcPowerMatrix <- function(n){
   # calculates a symetric 'power' matrix with 0 on the diagonal, 
@@ -142,36 +48,49 @@ CalcPowerMatrix <- function(n){
   abs(row(mat) - col(mat))
 }
 
-# covariance-, correlation- and in-between-matrices
+
 CalcR <- function(rho, pm){
+  # calculates a correlation matrix R
+  #
+  # Args:
+  #   rho:        autoregressive parameter
+  #   pm:         power matrix, as calculated by CalcPowerMatrix()
+  #
+  # Returns: 
+  #   correlation matrix
   rho^pm
 }
 
+
 CalcQ <- function(rho, pm){
+  # calculates the sigma-factored-out vcov matrix Q
+  #
+  # Args:
+  #   rho:        autoregressive parameter
+  #   pm:         power matrix, as calculated by CalcPowerMatrix()
+  #
+  # Returns: 
+  #   sigma-factored-out vcov matrix Q
   (1/(1-rho^2)) * CalcR(rho, pm)
 }
 
-CalcS <- function(rho, pm, s_2){
-  s_2 * CalcQ(rho, pm)
-}
 
 CalcQ_Lit <- function(X, rho=0) {
-  # calculates the (pseudo) variance-covariance matrix (and stats) for 
-  #   a Random Walk (with opt. AR1)
+  # calculates the (pseudo) vcov matrix for 
+  #   a Random Walk (RW) (with opt. AR1)
   #
   # Args:
   #   X:            matrix of high-frequency indicators
   #   rho:          if != 0, a AR1 is added to the RW (Litterman)
   #
   # Returns:
-  #   Q_Lit:        pseudo variance-covariance matrix
+  #   pseudo vcov matrix
 
   # dimension of y_l
   n <- dim(X)[1]
 
   # calclation of S
-  H <- diag(n)
-  D <- diag(n)
+  H <- D <- diag(n)
   diag(D[2:nrow(D), 1:(ncol(D)-1)]) <- -1
   diag(H[2:nrow(H), 1:(ncol(H)-1)]) <- -rho
   Q_Lit <- solve(t(D)%*%t(H)%*%H%*%D)
@@ -180,6 +99,135 @@ CalcQ_Lit <- function(X, rho=0) {
   Q_Lit
 }
 
-# CalcQ_Lit <- function(X, rho=0){
-#   (1/(1-rho^2)) * CalcR_Lit(X, rho=0)
-# }
+
+CalcGLS <- function(y, X, vcov, logl=TRUE, stats=TRUE){
+  # computationally efficient and numerically stable GLS estimation
+  #
+  # Args:
+  #   y:            vector with LHS data
+  #   X:            matrix with RHS data (same frequency as y)
+  #   vcov:         (pseudo) variance covariance matrix
+  #   logl:         logical, compute logl of the regression
+  #   se:           logical, compute standard errors of the regression
+  #
+  # Returns:
+  #   A list containing the following elements:
+  #   coefficients  vector, GLS coefficients
+  #   rss           scalar, generalized residual sum of square 
+  #   tss           scalar, generalized total sum of square
+  #   logl          scalar, log-likelihood
+  #   s_2:          scalar, ML-estimator of the variance of the regression
+  #   s_2_gls:      scalar, GLS-estimator of the variance of the regression
+  #   se            vector, standard errors of the coefficients
+  #   rank          scalar, number of right hand variables (including intercept)
+  #   df            scalar, degrees of freedom
+  #   vcov_inv      matrix, inverted vcov matrix
+  #   r.squared     scalar, R2
+  #   adj.r.squared scalar, adj. R2
+  #   aic           scalar, Akaike information criterion
+  #   bic           scalar, Bayesian information criterion
+  #
+  # Remarks:
+  #   Algorithm developed by Paige, 1979. The implementation is based on:
+  #   Ake Bjoerck, 1990: Numerical Methods for Least Squares Problems, S. 164 
+  #   http://books.google.ch/books?id=ZecsDBMz5-IC&lpg=PA164&ots=pv1iGpWJM1&dq=paige%20gls%20algorithm&pg=PA164#v=onepage&q&f=true
+  #
+  #   The notation in this function follows Bjoerk and ignores the usual
+  #   conventions in the tempdisagg
+  
+  if (dim(y)[1] <= dim(X)[2]) stop("not enough degrees of freedom")
+  
+  # using Bjoerck's notation
+  b <- y
+  A <- X
+  W <- vcov
+  
+  # dimensions as in Bjoerck (different from tempdisagg convention)
+  m <- dim(A)[1]
+  n <- dim(A)[2] 
+  
+  # Cholesky decomposition of vcov
+  B <- t(chol(W))
+  
+  # QR decomposition of X, Eq. 4.3.19
+  qr.X <- qr(X)
+  Q <- qr.Q(qr.X, complete = TRUE)
+  R <- qr.R(qr.X)
+  
+  # Application to b and B
+  .c <- t(Q) %*% b
+  c1 <- .c[1:n, ]
+  c2 <- .c[(n+1):m, ]
+  
+  .C <- t(Q) %*% B
+  C1 <- .C[1:n, ]
+  C2 <- .C[(n+1):m, ]
+  
+  # Eq. 4.3.21:
+  # transpose C2, flip vertically and horizontally
+  tC2 <- t(C2)
+  ftC2 <-  tC2[dim(tC2)[1]:1, dim(tC2)[2]:1]
+  
+  rq.ftC2 <- qr(ftC2)
+  PP <- qr.Q(rq.ftC2, complete = TRUE) 
+  SS <- qr.R(rq.ftC2)
+  
+  # flip PP and SS vertically and horizontally, transpose S
+  P <- PP[dim(PP)[1]:1, dim(PP)[2]:1]
+  S <- t(SS[dim(SS)[1]:1, dim(SS)[2]:1]) 
+  
+  P1 <- P[, 1:n]
+  P2 <- P[, (n+1):m]
+  
+  u2 <- matrix(backsolve(S, c2))
+  v  <- P2 %*% u2
+  
+  # coefficients
+  x <- backsolve(R, c1 - C1 %*% v)
+  
+  # output and stats
+  z <- list()
+  z$coefficients <- as.numeric(x)
+  
+  # generalized RSS 
+  z$rss <- as.numeric(t(u2) %*% u2)
+  
+  if (logl){
+    # standard error of the regression
+    z$s_2 <- z$rss/m
+    u_l <- y - X %*% z$coefficients
+    z$logl <- as.numeric(- m / 2 - m * log(2 * pi) / 2 - m * log(z$s_2) / 
+                           2 - log(det(vcov)) / 2)
+  }
+  
+  if (stats){
+    z$s_2_gls <- z$rss/(m-n)
+    
+    # vcov: Bjoerck, Eq. 4.3.23
+    Lt <- C1 %*% P1
+    R_inv <- backsolve(R, diag(n))
+    C <- R_inv %*% Lt %*% t(Lt) %*% t(R_inv)
+    
+    # standard errors of the coefficients
+    z$se <- sqrt(diag(z$s_2_gls * C))
+    
+    # total sum of squares                                 TODO: Avoid inverse
+    vcov_inv <- solve(vcov)
+    e <- matrix(rep(1, m))
+    y_bar <- as.numeric(t(e) %*% vcov_inv %*% y / t(e) %*% vcov_inv %*% e)
+    z$tss  <- as.numeric(t(y - y_bar) %*% vcov_inv %*% (y - y_bar))
+    
+    # other stats
+    z$rank             <- n
+    z$df               <- m - n  
+    z$r.squared        <- 1 - z$rss/z$tss
+    z$adj.r.squared    <- 1 - (z$rss * (m - 1))/(z$tss * (m - n))
+    z$aic              <- log(z$rss/m) + 2 * (n/m)
+    z$bic              <- log(z$rss/m) + log(m) * (n/m)
+    z$vcov_inv         <- vcov_inv
+  }
+  z
+}
+
+
+

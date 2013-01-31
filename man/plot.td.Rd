@@ -1,8 +1,8 @@
 \name{plot.td}
 \alias{plot.td}
 
-\title{Residual Plot of a 'td'-Estimation}
-\description{Plot method for class "td". Plot the predicted and actual low frequency series, and residuals.}
+\title{Residual Plot for Temporal Disaggregation}
+\description{Plot method for class \code{"td"}. Plot the predicted and actual low frequency series, and residuals.}
 \usage{
 \method{plot}{td}(x, \dots)
 }
@@ -28,4 +28,4 @@ mod2 <- td(sales.a ~ imports.q + exports.q)
 plot(mod2)  
 
 }
-\keyword{disaggregation method}
+\keyword{ts, models}

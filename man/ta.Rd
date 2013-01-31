@@ -1,21 +1,19 @@
 \name{ta}
 \alias{ta}
-\alias{SubConvertEnd}
-\alias{SubConvertStart}
-\alias{SubAggregation}
+
 
 \title{Temporal Aggregation of Time Series}
 \description{Performs temporal aggregation of high to low
-frequency time series. \code{ta} only works with \code{ts} or \code{mts} time series
-objects}
+frequency time series. Currently, \code{ta} only works with \code{ts} or \code{mts} time series
+objects.}
 \usage{
-  ta(x, conversion = "sum", to = "annual")
+ta(x, conversion = "sum", to = "annual")
 }
 \arguments{
   \item{x}{a time series object of class \code{"ts"} or \code{"mts"}.}
-  \item{conversion}{type of conversion: \code{"sum"} (default),
+  \item{conversion}{type of conversion: \code{"sum"},
   \code{"average"}, \code{"first"} or \code{"last"}.}
-  \item{to}{(low-frequency) destination frequency as a character string (\code{"annual"} (default) or \code{"quarterly"}) or as a scalar (e.g. \code{1}, \code{2}, \code{4}).}
+  \item{to}{(low-frequency) destination frequency as a character string (\code{"annual"} or \code{"quarterly"}) or as a scalar (e.g. \code{1}, \code{2}, \code{4}).}
 }
 \details{
 \code{ta} is used to aggregate a high frequency time series into a low frequency series, while the latter is either the sum, the average, the first or the last value of the high-frequency series. \code{ta} is the inverse function of \code{\link{td}}. If applied to an output series of \code{td}, \code{ta} yields the original series.
@@ -36,7 +34,7 @@ Christoph Sax, Peter Steiner
 data(swisspharma)
 
 sales.q.a <- ta(sales.q, conversion = "sum", to = "annual")
-sales.a - sales.q.a
+all.equal(sales.a, sales.q.a)
 }
-\keyword{disaggregation method}
+\keyword{ts, models}
 
