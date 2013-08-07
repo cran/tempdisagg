@@ -1,6 +1,6 @@
 SubRegressionBased <- function(y_l, X, conversion = "sum", 
                                method = "chow-lin-maxlog", fr = 4, 
-                               neg.rho = FALSE, 
+                               truncated.rho = 0, 
                                fixed.rho = 0.5, tol = 1e-16, 
                                lower = -0.999, upper = 0.999){
   # performs temporal disaggregation for regression based methods
@@ -10,7 +10,7 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   #   X:            matrix of high-frequency indicators
   #   conversion:   type of conversion ("sum", "average", "first", "last")
   #   method:       method
-  #   neg.rho:      should a negative rho (AR1-parameter) be allowed 
+  #   truncated.rho:lower bound for rho (AR1-parameter)
   #   fixed.rho:    set a predefined rho
   #   fr:           ratio of high-frequency units per low-frequency unit
   #   tol:          desired accuracy, passed on to optim()
@@ -18,8 +18,10 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   #
   # Returns:
   #   A list, containing the output of CalcGLS() and the following elements:
-  #     fitted.values   vector, interpolated (and extrapolated) high frequency 
+  #     values          vector, interpolated (and extrapolated) high frequency 
   #                     series
+  #     fitted.values   vector, low-frequency residuals fitted values of the
+  #                     regression
   #     p               vector, preliminary high frequency series
   #     residuals       vector, low-frequency residuals
   #     rho             scalar, autoregressive parameter
@@ -77,9 +79,10 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
                                  maximum = FALSE)
     rho <- optimize.results$minimum
     
-    # set negative rho to 0 if specified (faster than 'lower' = 0)
-    if ((!neg.rho) & (rho < 0)){
-      rho <- 0
+    # set negative rho to truncated.rho if specified 
+    # (faster than 'lower' = truncated.rho)
+    if (rho < truncated.rho){
+      rho <- truncated.rho
       truncated <- TRUE
     } 
     
@@ -105,7 +108,10 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   
   # final GLS estimation (aggregated)
   z <- CalcGLS(y = y_l, X = X_l, vcov = Q_l)
-  
+
+  # Check if X is singular
+  if(qr(X)$rank < min(dim(X))) {warning("\nX is singular!\n")}
+
   # preliminary series
   p   <- as.numeric(X %*% z$coefficients)
   
@@ -119,8 +125,9 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   y <- as.numeric(p + D %*% u_l)
   
   # output
-  z$vcov_inv         <- NULL  # not need to keep
-  z$fitted.values    <- y
+  z$vcov_inv         <- NULL  # no need to keep
+  z$values           <- y
+  z$fitted.values    <- C %*% p
   z$p                <- p
   z$residuals        <- u_l
   z$rho              <- rho
@@ -168,16 +175,14 @@ SubDenton <- function(y_l, X, conversion, method, fr,
   # conversion matrix expanded with zeros
   C <- CalcC(n_l, conversion, fr, n)
   
-  D <- diag(n)
+  D <- D_0 <- diag(n)
   diag(D[2:n, 1:(n-1)]) <- -1
-  D_0 <- diag(n)
   X_inv <- diag(1 / (as.numeric(X)/mean(X)))
   
   if (h == 0) {
     if(criterion == "proportional") {
       D_0 <- D_0 %*% X_inv
     }
-    D_1 <- D_0
   } else if (h>0) {
     for (i in 1:h) {
       D_0 <- D%*%D_0
@@ -191,8 +196,9 @@ SubDenton <- function(y_l, X, conversion, method, fr,
   u_l <- as.numeric(y_l - C %*% X)
   
   if (method == "denton-cholette"){
-    
-    D_1 <- D_0[-(1:h),]
+    if (h == 0) {
+      D_1 <- D_0
+    } else {D_1 <- D_0[-(1:h),]}
     A <- t(D_1)%*% D_1
     
     # Eq. (2.2) from Denton (1971); Eq (6.8) from Cholette and Dagum (2006)
@@ -207,7 +213,6 @@ SubDenton <- function(y_l, X, conversion, method, fr,
     y <- y[1:n]
     
   } else if (method == "denton"){
-    
     D_1 <- D_0
     
     # Denton (1971), in the text below Eq. (2.2)
@@ -222,7 +227,8 @@ SubDenton <- function(y_l, X, conversion, method, fr,
   
   # output
   z <- list()
-  z$fitted.values <- y
+  z$values        <- y
+  z$fitted.values <- C %*% X
   z$p             <- X
   z$residuals     <- u_l
   z$criterion     <- criterion

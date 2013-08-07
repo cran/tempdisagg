@@ -1,17 +1,38 @@
+#' Temporal Aggregation of Time Series
+#' 
+#' Performs temporal aggregation of high to low frequency time series. 
+#' Currently, \code{ta} only works with \code{ts} or \code{mts} time series 
+#' objects.
+#' 
+#' \code{ta} is used to aggregate a high frequency time series into a low
+#' frequency series, while the latter is either the sum, the average, the first
+#' or the last value of the high-frequency series. \code{ta} is the inverse
+#' function of \code{\link{td}}. If applied to an output series of \code{td},
+#' \code{ta} yields the original series.
+#' 
+#' @param x           a time series object of class \code{"ts"} or \code{"mts"}.
+#' @param conversion  type of conversion: \code{"sum"}, \code{"average"}, 
+#'                    \code{"first"} or \code{"last"}.
+#' @param to          (low-frequency) destination frequency as a character 
+#'                    string (\code{"annual"} or \code{"quarterly"}) or as a 
+#'                    scalar (e.g. \code{1}, \code{2}, \code{4}).
+#'                    
+#' @return \code{ta} returns an object of class \code{"ts"} or \code{"mts"}, 
+#'   depending on the class of the input series.
+#' 
+#' @seealso \code{\link{td}} for the main function for temporal disaggregation.
+#' 
+#' @examples
+#' data(swisspharma)
+#'   
+#' sales.q.a <- ta(sales.q, conversion = "sum", to = "annual")
+#' all.equal(sales.a, sales.q.a)
+#' 
+#' @keywords ts, models
+#' @export
+#' 
 ta <- function(x, conversion = "sum", to = "annual"){
-  # performs a temporal agregation of one or several time series (main function)
-  #
-  # Args:
-  #   x:            a time series object of class "ts" or "mts"
-  #   conversion:   type of conversion ("sum", "average", "first", "last")
-  #   to:           destination frequency ("quarterly" or "monthly"), only for
-  #                 Denton without indicators
-  #
-  # Returns:
-  #   An object of class "ts" or "mts", depending on the class of the input series.
-  #
-  # Remarks:
-  #   Calls SubAggregation for computation
+  # Calls SubAggregation for computation
 
   if (is.numeric(to)){  # frequency specified by a number
     f_l <- to
@@ -29,15 +50,16 @@ ta <- function(x, conversion = "sum", to = "annual"){
 
   if (inherits(x, "mts")){
     ncol  <- dim(x)[2]
-    first  <- SubAggregation(x[,1], conversion=conversion, f_l=f_l)
-    mat <- matrix(NA, nrow=length(first), ncol=ncol)
-    for (i in 1:ncol) {
-      mat[,i] <- SubAggregation(x[,i], conversion=conversion, f_l=f_l)
+    first  <- SubAggregation(x[,1], conversion = conversion, f_l = f_l)
+    mat <- matrix(NA, nrow = length(first), ncol = ncol)
+    mat[,1] <- first     # first column
+    for (i in 2:ncol) {  # remaining columns
+      mat[,i] <- SubAggregation(x[,i], conversion = conversion, f_l = f_l)
     }
-    z <- ts(mat, start=start(first), frequency=f_l)
+    z <- ts(mat, start=start(first), frequency = f_l)
     dimnames(z)[2] <- dimnames(x)[2]
   } else {
-    z <- SubAggregation(x, conversion=conversion, f_l=f_l)
+    z <- SubAggregation(x, conversion = conversion, f_l = f_l)
   }
   z
 }
@@ -48,8 +70,10 @@ SubAggregation <- function(x, conversion = "sum", f_l = 1){
   #
   # Args:
   #   x:            a single time series object of class "ts"
-  #   f_l:          frequency of the (low-frequency) destination series. Overrides the to argument. 
-  #   to:           destination frequency ("quarterly" or "monthly"), only for Denton without indicators
+  #   f_l:          frequency of the (low-frequency) destination series. 
+  #                 Overrides the to argument. 
+  #   to:           destination frequency ("quarterly" or "monthly"), only for 
+  #                 Denton without indicators
   #
   # Returns:
   #   A time series object of class "ts"
@@ -68,12 +92,19 @@ SubAggregation <- function(x, conversion = "sum", f_l = 1){
   lf.end <- SubConvertEnd(hf.end = hf.end, f = f, f_l = f_l)
   lf.end.na <- SubConvertEnd(hf.end = hf.end.na, f = f, f_l = f_l)
 
-  # if series contains only NAs, return NAs
+  # if all observations are NAs, return NAs
   if (all(is.na(x))){
-    z <- window(ts(NA, start=lf.start.na, frequency=f_l), end=lf.end.na, extend=TRUE)
+    z <- window(ts(NA, start = lf.start.na, frequency=f_l), 
+                end = lf.end.na, extend=TRUE)
+  # if series contains insufficient numbers of observations, return NAs
+  } else if (lf.start > lf.end){
+    z <- window(ts(NA, start = lf.start.na, frequency=f_l), 
+                end = lf.end.na, extend=TRUE)
   } else {
-    x.used <- window(x, start=lf.start, end=lf.end + 1 / f_l - 1/ f)
-    agg <- as.numeric(CalcC(n_l=length(x.used)/fr, conversion=conversion, fr=fr) %*% x.used)
+    x.used <- window(x, start = lf.start, end = lf.end + 1 / f_l - 1/ f)
+    agg <- as.numeric(CalcC(n_l = length(x.used)/fr, conversion = conversion, 
+                            fr=fr
+                            ) %*% x.used)
     agg.ts <- ts(agg, start=lf.start, frequency=f_l)
     z <- window(agg.ts, start=lf.start.na, end=lf.end.na, extend=TRUE)
   }
@@ -99,7 +130,9 @@ SubConvertEnd <- function(hf.end, f, f_l){
   #   floor()
 
   fr <- f / f_l
-  floor(hf.end) + (floor(((hf.end - floor(hf.end)) * f + 1 + 1e-8) / fr) - 1) / f_l
+  floor(hf.end) + (floor(
+    ((hf.end - floor(hf.end)) * f + 1 + 1e-8) / fr
+    ) - 1) / f_l
   # +1e-8 avoids rounding problems
 }
 
@@ -120,7 +153,7 @@ SubConvertStart <- function(hf.start, f, f_l){
   #   Identical to SubConvertEnd() except that floor() is exchanged by ceiling().
 
   fr <- f / f_l
-  floor(hf.start) + ceiling(((hf.start - floor(hf.start)) * f)/fr - 1e-8)/f_l
+  floor(hf.start) + ceiling(((hf.start - floor(hf.start)) * f) /fr - 1e-8) / f_l
   # -1e-8 avoids rounding problems
 }
 
