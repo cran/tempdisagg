@@ -1,4 +1,4 @@
-SubRegressionBased <- function(y_l, X, conversion = "sum", 
+SubRegressionBased <- function(y_l, X, n.bc, n.fc, conversion = "sum", 
                                method = "chow-lin-maxlog", fr = 4, 
                                truncated.rho = 0, 
                                fixed.rho = 0.5, tol = 1e-16, 
@@ -8,6 +8,7 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   # Args:
   #   y_l:          vector of the low-frequency left-hand side variable
   #   X:            matrix of high-frequency indicators
+  #   n.bc, n.fc    integer, number of hf periods to backcast, forecast
   #   conversion:   type of conversion ("sum", "average", "first", "last")
   #   method:       method
   #   truncated.rho:lower bound for rho (AR1-parameter)
@@ -27,16 +28,23 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   #     rho             scalar, autoregressive parameter
   #     truncated       logical, whether rho has been truncated to 0
   
+  stopifnot(inherits(n.bc, "integer"))
+  stopifnot(inherits(n.fc, "integer"))
+
+
   # dimensions of y_l and X
   n_l <- length(y_l)
   n <- dim(X)[1]
   m <- dim(X)[2]
-  
+
   # conversion matrix expanded with zeros
-  C <- CalcC(n_l, conversion, fr, n)
+  C <- CalcC(n_l, conversion, fr, n.bc = n.bc, n.fc = n.fc)
   
   pm <- CalcPowerMatrix(n)
   
+  # sanity test
+  stopifnot(identical(dim(C)[2], dim(X)[1]))
+
   # aggregated values
   X_l <- C %*% X
   
@@ -102,7 +110,9 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
                            "chow-lin-minrss-quilis",  "chow-lin-fixed", "ols")){
     Q       <- CalcQ(rho = rho, pm = pm)
   }
-  
+
+
+
   # aggregating Q
   Q_l <- C %*% Q %*% t(C)
   
@@ -113,30 +123,30 @@ SubRegressionBased <- function(y_l, X, conversion = "sum",
   if(qr(X)$rank < min(dim(X))) {warning("\nX is singular!\n")}
 
   # preliminary series
-  p   <- as.numeric(X %*% z$coefficients)
+  p   <- X %*% z$coefficients
   
   # distribution matrix
   D <- Q %*% t(C) %*% z$vcov_inv
   
   # low frequency residuals
-  u_l <- as.numeric(y_l - C %*% p)
+  u_l <- y_l - C %*% p
   
   # final series
-  y <- as.numeric(p + D %*% u_l)
-  
+  y <- p + D %*% u_l
+
   # output
   z$vcov_inv         <- NULL  # no need to keep
-  z$values           <- y
-  z$fitted.values    <- C %*% p
-  z$p                <- p
-  z$residuals        <- u_l
+  z$values           <- as.numeric(y)
+  z$fitted.values    <- as.numeric(C %*% p)
+  z$p                <- as.numeric(p)
+  z$residuals        <- as.numeric(u_l)
   z$rho              <- rho
   z$truncated        <- truncated
   z
 }
 
 
-SubDenton <- function(y_l, X, conversion, method, fr, 
+SubDenton <- function(y_l, X, n.bc, n.fc, conversion, method, fr, 
                       criterion = "proportional", h = 1) {
   # performs temporal disaggregation for denton methods
   #
@@ -173,7 +183,7 @@ SubDenton <- function(y_l, X, conversion, method, fr,
   n <- length(as.numeric(X))
   
   # conversion matrix expanded with zeros
-  C <- CalcC(n_l, conversion, fr, n)
+  C <- CalcC(n_l, conversion, fr, n.bc = n.bc, n.fc = n.fc)
   
   D <- D_0 <- diag(n)
   diag(D[2:n, 1:(n-1)]) <- -1
@@ -193,7 +203,7 @@ SubDenton <- function(y_l, X, conversion, method, fr,
   } else stop("wrong specification of h")
   
   # low frequency residuals
-  u_l <- as.numeric(y_l - C %*% X)
+  u_l <- y_l - C %*% X
   
   if (method == "denton-cholette"){
     if (h == 0) {
@@ -222,15 +232,15 @@ SubDenton <- function(y_l, X, conversion, method, fr,
     D <- Q %*% t(C) %*% solve(C %*% Q %*% t(C))
     
     # final series
-    y <- as.numeric(X + D %*% u_l)
+    y <- X + D %*% u_l
   }
   
   # output
   z <- list()
-  z$values        <- y
-  z$fitted.values <- C %*% X
-  z$p             <- X
-  z$residuals     <- u_l
+  z$values        <- as.numeric(y)
+  z$fitted.values <- as.numeric(C %*% X)
+  z$p             <- as.numeric(X)
+  z$residuals     <- as.numeric(u_l)
   z$criterion     <- criterion
   z$h             <- h
   
