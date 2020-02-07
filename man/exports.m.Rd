@@ -11,13 +11,12 @@
 \format{Each time series is an object of class \code{"ts"}. The number of
 observations depends on the frequency.}
 \source{
-Import and Export Data are from the Swiss Federal Customs 
+Import and Export Data are from the Swiss Federal Customs
 Administration. Sales Data are from the Swiss Federal Statistical Office.
 }
 \description{
 This data set contains the monthly and quarterly imports and exports of the
-chemical and pharmaceutical industry in Switzerland (in Mio. Swiss Francs) as
-well as their quarterly and annual sales (Index).
+chemical and pharmaceutical industry in Switzerland (in in millions of Swiss
+Francs) as well as their quarterly and annual sales (Index).
 }
 \keyword{datasets}
-
