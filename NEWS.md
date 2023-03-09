@@ -1,3 +1,18 @@
+# tempdisagg 1.1 (2023-03-08)
+
+## minor changes
+
+- Use GHA instead of Travis
+
+## bug fixes
+
+- Adjustment to work with latest version of tsbox
+
+## documentation
+
+- ?td: uniform uses criterion = "additive"
+
+
 # tempdisagg 1.0 (2020-02-07)
 
 ## major changes

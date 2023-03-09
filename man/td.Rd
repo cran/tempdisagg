@@ -30,7 +30,7 @@ specification are given under 'Details'.}
 (\code{"quarter"} (or \code{"quarterly"}), \code{"month"} (or \code{"monthly"}), \code{"day"},
 \code{"hour"}, \code{"minute"}, \code{"second"}, or \code{"year"})
 or as a scalar (e.g. \code{2}, \code{4}, \code{7}, \code{12}). Required if no right hand side
-indicator series is provided. The \href{https://www.tsbox.help}{tsbox} package must
+indicator series is provided. The \href{https://docs.ropensci.org/tsbox/}{tsbox} package must
 be installed to deal with frequencies other than monthly or quarterly. If
 the input series are numeric, \code{to} is a scalar indicating the
 frequency ratio.}
@@ -103,7 +103,7 @@ of differencing in Denton methods}
 Perform temporal disaggregation or interpolation of low frequency to high
 frequency time series. \code{td} can be used with objects of class
 \code{"ts"}, with numeric vectors or with any
-\href{https://www.tsbox.help}{ts-boxable} time series object.
+\href{https://docs.ropensci.org/tsbox/}{ts-boxable} time series object.
 }
 \details{
 \code{td} is used to disaggregate or interpolate a low frequency to a higher
@@ -164,7 +164,7 @@ beginning of the resulting series.  \code{"fast"} is a shortcut for
 same results as "denton-cholette" with \code{h = 1}, but is much faster.
 
 \code{"uniform"} is a special case of the \code{"denton"} approach, with
-\code{h} equals  \code{0} and \code{criterion} equals  \code{"proportional"}.
+\code{h} equals  \code{0} and \code{criterion} equals  \code{"additive"}.
 It distributes the residuals uniformly. If no indicator is used, this leads
 to a step-shaped series.
 
@@ -228,7 +228,7 @@ round(cbind(d.q, a1, a2, a3, a4, p1, p2, p3, p4))
 
 \dontrun{
 
-# Using altvernative time series classes (see www.tsbox.help)
+# Using altvernative time series classes (see https://docs.ropensci.org/tsbox/)
 library(tsbox)
 sales.a.xts <- ts_xts(window(sales.a, start = 2000))
 exports.q.xts <- ts_xts(window(exports.q, start = 2000))
@@ -262,8 +262,7 @@ dynamic models. \emph{Economomic Modelling}, 18, 269-280.
 Wei, W. W. S. (1994). Time series analysis. Addison-Wesley publ.
 
 Sax, C. und Steiner, P. (2013). Temporal Disaggregation of Time Series.
-\emph{The R Journal}, 5(2), 80-88.
-\url{https://doi.org/10.32614/RJ-2013-028}
+\emph{The R Journal}, 5(2), 80-88. \doi{10.32614/RJ-2013-028}
 }
 \seealso{
 \code{\link[=ta]{ta()}} for temporal aggregation, the inverse function of
