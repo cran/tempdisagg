@@ -1,6 +1,6 @@
-dd82c1cb2dcfebca924cc80d60d03018 *DESCRIPTION
+8af988883792136b4d509b9beb0df074 *DESCRIPTION
 0660c99baa19bff2c091ffb781adf636 *NAMESPACE
-39c42de7a41dac8655e978223f692111 *NEWS.md
+ae1d7f7453fe4bad87b612463c238f89 *NEWS.md
 101109423cbf56b18ff92b2f3c87340e *R/irregular.R
 874b2601c337f1b4cf0ee8f705fe4f94 *R/ta.R
 2155078959ee8de1a9e6110660208dda *R/td.R
@@ -10,8 +10,8 @@ cf02273786704f86c129fdeead9f420c *R/td.sub.R
 015e95f3297b50c332d11adbe76f3d77 *R/tempdisagg-package.R
 89576d874ea9b616ae40c22657e25875 *R/utils.R
 1bf296aab997ce47503cccd8a310a153 *README.md
-0c6ad5b3446721162c89589e8077ab1c *build/partial.rdb
-32d09b8c5bb8fbee4acd50c2f2f03044 *build/vignette.rds
+7080893e02c49cd296d4424b9be55069 *build/partial.rdb
+5f8a2bdb325f8677e22403b985c4a6f8 *build/vignette.rds
 e69889a62f7f44dfb2a2989e74167acb *data/swisspharma.RData
 c0964b1be29fe9b1a10b7ad3e488ee69 *data/tempdisagg.RData
 3ab083c3725df5db2a4c30d2c7ec3782 *demo/00Index
@@ -19,10 +19,10 @@ c1640e7bff84338ec6f2597cc635fd4c *demo/tempdisagg.R
 aa6be831e2de77828b4d8bcd80d2ff49 *inst/CITATION
 fa182af4a69cedb83da305e7175ff410 *inst/doc/hf-disagg.R
 544113cf06f7f4801e78e709b651f07e *inst/doc/hf-disagg.Rmd
-d7dc24693c0499e2604c7900d15b0946 *inst/doc/hf-disagg.html
+bba3f5766e9ee07b634eede2d982441b *inst/doc/hf-disagg.html
 82ad1cd37c9ebe6c8926c8b5bb7c9cba *inst/doc/intro.R
 37b8a1a27bbe5ac749f46f08f56a4291 *inst/doc/intro.Rmd
-e078bc343ec6d2a67ed288a7da0c920c *inst/doc/intro.html
+21ab0e9987d2e62f0442f8b915e11e53 *inst/doc/intro.html
 632ed659cfe68278abd9ba98ad38f77a *inst/prepare/update_data.R
 902878138d7343891b5416bbea1df092 *man/exports.m.Rd
 f122553cb3703c4982264a6093a72f60 *man/gdp.q.Rd
@@ -33,10 +33,10 @@ c74db4ef32c2ab752fc593fcae537ce8 *man/spi.d.Rd
 d2d9709ec9b1b276a349d250efed5cac *man/ta.Rd
 6f8680782c8ff3f47f06ef3a8c654d04 *man/td.Rd
 c2c88953cd6cc8eb3f0ae477c580acbb *man/tempdisagg-package.Rd
-dff576440f1db5ef0ca7aad4db6f84fc *tests/test-all.R
+b6d8bf6c32a148b8f2d3793595441b87 *tests/test-all.R
 dbf0638c2b2f16d1ee28fccf5f1226f1 *tests/testthat/test_misc.R
 9935a9e9e10d5a68b6b3e3723e960c9b *tests/testthat/test_numeric.R
-cf9f1da8f9db5d11a589aa4e9c711b05 *tests/testthat/test_output.R
+cae30320bb5d06c498663e867c1fa594 *tests/testthat/test_output.R
 785d784782681f4b491b604215e4d607 *tests/testthat/test_td.R
 544113cf06f7f4801e78e709b651f07e *vignettes/hf-disagg.Rmd
 37b8a1a27bbe5ac749f46f08f56a4291 *vignettes/intro.Rmd
